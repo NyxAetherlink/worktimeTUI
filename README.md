@@ -23,6 +23,7 @@ Requires a current stable Rust toolchain and a true-color terminal at least
 | S | End current session, retaining recorded totals |
 | P | Switch stopwatch / Pomodoro; stops current session |
 | B | Include or exclude accumulated breaks in displayed totals |
+| E | Export or refresh spreadsheet CSV |
 | Q / Ctrl+C | Save and quit |
 
 Switching projects stops the old session and opens the new project paused. There
@@ -67,3 +68,17 @@ The UI uses [Ratatui](https://docs.rs/ratatui/0.30.2/ratatui/).
 The palette follows the supplied CyberNord16colorANSI reference: background
 `#2e3440`, borders `#0077b6`, accent `#00e5ff`, text `#e5e9f0`, focus
 `#a3be8c`, and break `#b48ead`.
+
+## Spreadsheet export
+
+Press **E** to export all projects to `exports/project-totals.csv` inside the
+application data directory. The footer shows the full path after export. Open it
+in Excel, LibreOffice Calc, or import it into Google Sheets.
+
+Columns contain the project name, numeric focus/break/tracked seconds, decimal
+tracked hours, and the current break-inclusion preference. Milliseconds are
+preserved in the seconds columns. Press E again to replace this app-owned snapshot
+with current totals, without duplicate rows. Copy it elsewhere before making
+spreadsheet edits you want to retain. An already-open spreadsheet may need to be
+reloaded or reimported; this is a manual CSV refresh, not live spreadsheet sync.
+Formula-like project names receive an apostrophe prefix for safe text import.

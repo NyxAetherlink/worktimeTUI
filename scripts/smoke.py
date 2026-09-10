@@ -1,3 +1,4 @@
+import csv
 import os, pty, subprocess, select, time, fcntl, termios, struct, json, tempfile
 binary=os.path.abspath(os.path.join(os.path.dirname(__file__), '../target/debug/worktimeTUI'))
 def launch(directory):
@@ -27,6 +28,11 @@ with tempfile.TemporaryDirectory(prefix='worktime-smoke-') as d:
     initial=data['projects'][0]['focus_ms']
     assert 1000 <= initial < 2500, data
     drain(fd,.5)
+    send(fd,b'e')
+    with open(d+'/exports/project-totals.csv', encoding='utf-8-sig', newline='') as exported:
+        rows=list(csv.DictReader(exported))
+    assert rows[0]['Project']=='Smoke project'
+    assert float(rows[0]['Focus seconds']) >= 1
     send(fd,b'q'); assert p.wait(timeout=3)==0
     os.close(fd)
     data=json.load(open(d+'/projects.json'))
@@ -40,8 +46,13 @@ with tempfile.TemporaryDirectory(prefix='worktime-smoke-') as d:
     assert data['projects'][0]['focus_ms'] > initial + 900, data
     send(fd,b'pb')
     send(fd,b'nSecond\r')
+    send(fd,b'e')
+    with open(d+'/exports/project-totals.csv', encoding='utf-8-sig', newline='') as exported:
+        rows=list(csv.DictReader(exported))
+    assert rows[0]['Project']=='Smoke project'
+    assert float(rows[0]['Focus seconds']) >= 1
     send(fd,b'q'); assert p.wait(timeout=3)==0
     os.close(fd)
     data=json.load(open(d+'/projects.json'))
     assert len(data['projects'])==2 and data['pomodoro'] and data['include_breaks']
-    print('PASS: real PTY create, start, pause, mouse start, save, reopen paused, mode, break preference, second project')
+    print('PASS: real PTY create, start, pause, mouse start, save, reopen paused, mode, break preference, second project, CSV export and refresh')

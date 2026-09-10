@@ -1,3 +1,4 @@
+mod export;
 mod model;
 mod storage;
 use crossterm::{
@@ -129,7 +130,7 @@ impl App {
         f.render_widget(
             Paragraph::new(Line::from(vec![
                 Span::styled(" ◈ worktimeTUI ", Style::default().fg(CYAN).bold()),
-                Span::raw(" / CYBERNORD     FOCUSED • MINIMAL • RELENTLESS"),
+                Span::raw(" / Project time tracking"),
             ]))
             .block(Block::bordered().border_style(Style::default().fg(BLUE))),
             rows[0],
@@ -272,7 +273,7 @@ impl App {
             )
         } else {
             format!(
-                "N new · ↑↓/JK open · Space start/pause · S stop\nP Pomodoro · B include/exclude breaks · Q save & quit\n{}",
+                "N new · ↑↓/JK open · Space start/pause · S stop\nP Pomodoro · B count breaks · E export CSV · Q quit\n{}",
                 self.message
             )
         };
@@ -292,7 +293,7 @@ fn main() -> io::Result<()> {
     let args: Vec<_> = std::env::args().skip(1).collect();
     if args.iter().any(|a| a == "--help" || a == "-h") {
         println!(
-            "worktimeTUI — CyberNord project timer\nUsage: worktimeTUI [--data-dir PATH]\nN new project | arrows select | Space start/pause | S stop\nP Pomodoro | B count breaks | Q save and quit"
+            "worktimeTUI — CyberNord project timer\nUsage: worktimeTUI [--data-dir PATH]\nN new project | arrows select | Space start/pause | S stop\nP Pomodoro | B count breaks | E export CSV | Q save and quit"
         );
         return Ok(());
     }
@@ -341,7 +342,15 @@ fn run(terminal: &mut ratatui::DefaultTerminal, app: &mut App, store: &Store) ->
             }
             match event::read()? {
                 Event::Key(key) if key.kind == KeyEventKind::Press => {
-                    quit = app.key(key);
+                    if app.input.is_none() && key.code == KeyCode::Char('e') {
+                        app.message = match export::export(&app.data, store.path.parent().unwrap())
+                        {
+                            Ok(path) => format!("CSV updated: {}", path.display()),
+                            Err(error) => format!("Export failed: {error}"),
+                        };
+                    } else {
+                        quit = app.key(key);
+                    }
                     changed = true;
                 }
                 Event::Mouse(m)
